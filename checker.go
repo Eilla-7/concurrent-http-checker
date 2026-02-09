@@ -7,17 +7,24 @@ import (
 	"time"
 )
 
+var printMutex sync.Mutex
+
 func checkURL(url string, wg *sync.WaitGroup, client *http.Client) {
 	defer wg.Done()
 
 	start := time.Now()
 	resp, err := client.Get(url)
+	elapsed := time.Since(start)
+
+	printMutex.Lock()
+
 	if err != nil {
 		fmt.Printf("%s -> ERROR: %v\n", url, err)
+		defer printMutex.Unlock()
 		return
 	}
 	defer resp.Body.Close()
 
-	elapsed := time.Since(start)
 	fmt.Printf("%s -> %d (Time: %v)\n", url, resp.StatusCode, elapsed)
+	printMutex.Unlock()
 }
